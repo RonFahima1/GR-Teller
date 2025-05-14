@@ -1,0 +1,70 @@
+{
+  "components": [
+    {
+      "path": "src/components/layout/AppLayout.tsx",
+      "name": "AppLayout"
+    },
+    {
+      "path": "src/components/ui/button.tsx",
+      "name": "Button"
+    },
+    {
+      "path": "src/components/ui/card.tsx",
+      "name": "Card"
+    },
+    {
+      "path": "src/components/ui/input.tsx",
+      "name": "Input"
+    },
+    {
+      "path": "src/components/ui/select.tsx",
+      "name": "Select"
+    },
+    {
+      "path": "src/components/ui/dialog.tsx",
+      "name": "Dialog"
+    },
+    {
+      "path": "src/components/ui/accordion.tsx",
+      "name": "Accordion"
+    },
+    {
+      "path": "src/components/ui/alert-dialog.tsx",
+      "name": "AlertDialog"
+    },
+    {
+      "path": "src/components/ui/alert.tsx",
+      "name": "Alert"
+    },
+    {
+      "path": "src/components/ui/checkbox.tsx",
+      "name": "Checkbox"
+    },
+    {
+      "path": "src/components/ui/date-picker.tsx",
+      "name": "DatePicker"
+    },
+    {
+      "path": "src/components/ui/dropdown-menu.tsx",
+      "name": "DropdownMenu"
+    }
+  ],
+  "pages": [
+    {
+      "path": "src/app/(app)/currency-exchange/page.tsx",
+      "name": "CurrencyExchangePage"
+    },
+    {
+      "path": "src/app/(app)/dashboard/page.tsx",
+      "name": "DashboardPage"
+    },
+    {
+      "path": "src/app/(app)/send-money/page.tsx",
+      "name": "SendMoneyPage"
+    },
+    {
+      "path": "src/app/(app)/exchange/page.tsx",
+      "name": "ExchangePage"
+    }
+  ]
+}

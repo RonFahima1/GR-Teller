@@ -1,0 +1,21 @@
+{
+  "projects": [
+    {
+      "id": "g6nEhkscPr3yPu5TXeD7BX",
+      "token": "Ta5J7sLUHhkWiRghk13tn4rPn9LK9iZia0RREP7grhtjHuZk6sTcQnWBqosvQJVxY3Ist12ZgEHqhXUaGiPA"
+    }
+  ],
+  "hosts": {
+    "g6nEhkscPr3yPu5TXeD7BX": "https://studio.plasmic.app"
+  },
+  "components": {
+    "path": "src/components/plasmic",
+    "type": "nextjs"
+  },
+  "generate": {
+    "path": "src/generated/plasmic",
+    "type": "typescript"
+  },
+  "watch": true,
+  "sync": true
+}

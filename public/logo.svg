@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg width="200" height="50" viewBox="0 0 200 50" version="1.1" xmlns="http://www.w3.org/2000/svg">
+  <style>
+    .logo-text { fill: var(--logo-text, #0066cc); }
+    .logo-accent { fill: var(--logo-accent, #ffd700); }
+    @media (prefers-color-scheme: dark) {
+      .logo-text { fill: var(--logo-text, #ffffff); }
+    }
+  </style>
+  <g id="GlobalRemit">
+    <path class="logo-text" d="M60 25 h140 v10 h-140z"/>
+    <circle class="logo-text" cx="25" cy="25" r="23"/>
+    <path class="logo-accent" d="M20 15 h10 v20 h-10z"/>
+  </g>
+</svg> 

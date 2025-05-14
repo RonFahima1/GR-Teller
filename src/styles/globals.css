@@ -1,0 +1,226 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --background: 210 40% 98%;
+    --foreground: 222.2 84% 4.9%;
+    --card: 210 40% 98%;
+    --card-foreground: 222.2 84% 4.9%;
+    --popover: 210 40% 98%;
+    --popover-foreground: 222.2 84% 4.9%;
+    --primary: 221.2 83.2% 53.3%;
+    --primary-foreground: 210 40% 98%;
+    --secondary: 217.2 32.6% 17.5%;
+    --secondary-foreground: 210 40% 98%;
+    --muted: 217.2 32.6% 17.5%;
+    --muted-foreground: 215 20.2% 65.1%;
+    --accent: 217.2 32.6% 17.5%;
+    --accent-foreground: 210 40% 98%;
+    --destructive: 0 84.2% 60.2%;
+    --destructive-foreground: 210 40% 98%;
+    --border: 217.2 32.6% 17.5%;
+    --input: 217.2 32.6% 17.5%;
+    --ring: 224.3 76.3% 48%;
+    --radius: 1rem;
+  }
+
+  .dark {
+    --background: 222.2 84% 4.9%;
+    --foreground: 210 40% 98%;
+    --card: 222.2 84% 4.9%;
+    --card-foreground: 210 40% 98%;
+    --popover: 222.2 84% 4.9%;
+    --popover-foreground: 210 40% 98%;
+    --primary: 221.2 83.2% 53.3%;
+    --primary-foreground: 210 40% 98%;
+    --secondary: 217.2 32.6% 17.5%;
+    --secondary-foreground: 210 40% 98%;
+    --muted: 217.2 32.6% 17.5%;
+    --muted-foreground: 215 20.2% 65.1%;
+    --accent: 217.2 32.6% 17.5%;
+    --accent-foreground: 210 40% 98%;
+    --destructive: 0 84.2% 60.2%;
+    --destructive-foreground: 210 40% 98%;
+    --border: 217.2 32.6% 17.5%;
+    --input: 217.2 32.6% 17.5%;
+    --ring: 224.3 76.3% 48%;
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+  body {
+    @apply bg-background text-foreground antialiased;
+  }
+  h1 {
+    @apply text-2xl font-semibold tracking-tight;
+  }
+  h2 {
+    @apply text-xl font-semibold tracking-tight;
+  }
+  h3 {
+    @apply text-lg font-semibold tracking-tight;
+  }
+}
+
+/* iOS-inspired styles */
+.ios-blur {
+  @apply bg-background/80 backdrop-blur-xl border border-border/50;
+}
+
+.ios-header {
+  @apply bg-background border-b border-border/50 shadow-sm;
+}
+
+.ios-sidebar {
+  @apply bg-background/80 backdrop-blur-xl border-r border-border/50;
+}
+
+.ios-search-input {
+  @apply rounded-lg border-0 bg-secondary/90 text-[14px] transition-all duration-200 ease-ios;
+  @apply placeholder:text-muted-foreground/60;
+  @apply hover:bg-secondary;
+  @apply focus:bg-secondary focus:ring-1 focus:ring-primary/20 focus:ring-offset-0;
+}
+
+.ios-nav-link {
+  @apply flex items-center gap-3 px-4 text-[15px] font-medium text-muted-foreground transition-all duration-200 ease-ios;
+}
+
+.ios-nav-link-active {
+  @apply text-primary;
+}
+
+.ios-input {
+  @apply h-[40px] rounded-xl border border-input bg-background px-3 py-2 text-[15px] ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/20 focus-visible:ring-offset-0 disabled:cursor-not-allowed disabled:opacity-50;
+}
+
+.ios-status-pill {
+  @apply inline-flex items-center rounded-full text-[13px] font-medium transition-colors;
+}
+
+.ios-status-pill-green {
+  @apply bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400;
+}
+
+.ios-status-pill-red {
+  @apply bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400;
+}
+
+.ios-status-pill-gray {
+  @apply bg-gray-100 text-gray-700 dark:bg-gray-800 dark:text-gray-400;
+}
+
+.card-ios {
+  @apply rounded-2xl border bg-card text-card-foreground shadow-sm hover:shadow-md transition-shadow duration-200 p-6;
+}
+
+/* Animations */
+@keyframes slideUpAndFade {
+  from {
+    opacity: 0;
+    transform: translateY(4px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes slideDownAndFade {
+  from {
+    opacity: 0;
+    transform: translateY(-4px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.animate-slide-up {
+  animation: slideUpAndFade 0.3s ease-out;
+}
+
+.animate-slide-down {
+  animation: slideDownAndFade 0.3s ease-out;
+}
+
+@layer utilities {
+  .ios-card {
+    @apply ios-blur rounded-2xl shadow-xl border border-gray-200/50 dark:border-gray-800/50 transition-all duration-200 hover:shadow-2xl hover:border-gray-300/50 dark:hover:border-gray-700/50;
+  }
+
+  .ios-button-secondary {
+    @apply rounded-xl bg-secondary hover:bg-secondary/80 text-secondary-foreground shadow-sm transition-all duration-200 hover:shadow-md active:scale-95;
+  }
+
+  .ios-status-pill-yellow {
+    @apply ios-status-pill bg-yellow-100 text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-400 hover:bg-yellow-200 dark:hover:bg-yellow-900/50;
+  }
+
+  .ios-status-pill-blue {
+    @apply ios-status-pill bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400 hover:bg-blue-200 dark:hover:bg-blue-900/50;
+  }
+
+  .ios-table {
+    @apply w-full text-[15px];
+  }
+
+  .ios-table th {
+    @apply border-b border-gray-200 dark:border-gray-800 px-6 py-4 text-left font-medium text-muted-foreground transition-colors duration-200;
+  }
+
+  .ios-table td {
+    @apply border-b border-gray-100 dark:border-gray-800/50 px-6 py-4 transition-colors duration-200;
+  }
+
+  .ios-table tr {
+    @apply transition-colors duration-200;
+  }
+
+  .ios-table tr:hover {
+    @apply bg-gray-50/50 dark:bg-gray-800/50;
+  }
+
+  /* Additional UI refinements */
+  .ios-focus-ring {
+    @apply focus:outline-none focus:ring-2 focus:ring-primary/20 focus:ring-offset-2 dark:focus:ring-offset-gray-900;
+  }
+
+  .ios-hover-scale {
+    @apply transition-transform duration-200 hover:scale-105 active:scale-95;
+  }
+
+  .ios-gradient-text {
+    @apply bg-clip-text text-transparent bg-gradient-to-r from-primary to-primary/80;
+  }
+
+  .ios-gradient-border {
+    @apply relative before:absolute before:inset-0 before:p-[1px] before:rounded-xl before:bg-gradient-to-r before:from-primary before:to-primary/80 before:-z-10;
+  }
+
+  .ios-glass-card {
+    @apply ios-blur rounded-2xl border border-white/20 dark:border-gray-800/50 shadow-xl backdrop-blur-xl;
+  }
+
+  .ease-ios {
+    transition-timing-function: cubic-bezier(0.23, 1, 0.32, 1);
+  }
+
+  .ios-page-header {
+    @apply flex items-center justify-between py-6 border-b border-border/50;
+  }
+
+  .ios-page-title {
+    @apply text-2xl font-semibold tracking-tight;
+  }
+
+  .ios-page-subtitle {
+    @apply text-[15px] text-muted-foreground mt-1;
+  }
+} 
