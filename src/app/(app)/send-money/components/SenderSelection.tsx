@@ -1,12 +1,14 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Search, UserPlus, CheckCircle, History, FilterIcon, Eye } from 'lucide-react';
-import { Input } from '@/components/ui/input';
-import { Button } from '@/components/ui/button';
 import { Client, Document } from '../hooks/useSendMoneyForm';
 import { ClientDetailsView } from './ClientDetailsView';
 import { ClientSearchFilter, SearchFilters } from './ClientSearchFilter';
 import { cn } from '@/lib/utils';
+
+// Import Apple-styled components
+import SearchAndFilterBar from './apple/SearchAndFilterBar';
+import SenderCard from './apple/SenderCard';
+import EmptyStateView from './apple/EmptyStateView';
 
 interface SenderSelectionProps {
   initialLoading: boolean;
@@ -115,115 +117,60 @@ export const SenderSelection: React.FC<SenderSelectionProps> = ({
     );
   }
 
+  // Check if there are no results with active filters
+  const hasActiveFilters = 
+    activeSearchFilters.filterByQrCode || 
+    activeSearchFilters.filterByCustomerCard || 
+    activeSearchFilters.qrCodeValue || 
+    activeSearchFilters.customerCardValue || 
+    searchQuery !== '';
+    
+  const hasNoResults = locallyFilteredClients.length === 0 && hasActiveFilters;
+
   return (
-    <div className="space-y-6 w-full">
-      <div className="flex flex-col sm:flex-row gap-2 items-center">
-        <div className="relative flex-grow w-full">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-gray-400" />
-          <Input
-            type="search"
-            placeholder="Search Senders by Name, Phone, ID..."
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            className="pl-10 w-full"
+    <div className="space-y-6 w-full max-w-screen-xl mx-auto">
+      {/* Search and filter bar */}
+      <SearchAndFilterBar
+        searchQuery={searchQuery}
+        setSearchQuery={setSearchQuery}
+        onClickFilter={() => setIsFilterOpen(true)}
+        onClickNewSender={() => setShowNewSenderForm(true)}
+      />
+
+      {/* Empty state */}
+      <AnimatePresence>
+        {hasNoResults && (
+          <EmptyStateView 
+            message="No senders found matching your search criteria. Try adjusting your filters or add a new sender."
+            showAddButton={true}
+            onClickAdd={() => setShowNewSenderForm(true)}
           />
-        </div>
-        <div className="flex gap-2 w-full sm:w-auto">
-            <Button variant="outline" size="icon" onClick={() => setIsFilterOpen(true)} className="flex-shrink-0">
-              <FilterIcon className="h-5 w-5" />
-            </Button>
-            <Button onClick={() => setShowNewSenderForm(true)} className="w-full sm:w-auto flex-grow sm:flex-grow-0">
-              <UserPlus className="mr-2 h-4 w-4" /> New Sender
-            </Button>
-        </div>
-      </div>
+        )}
+      </AnimatePresence>
 
-      {locallyFilteredClients.length === 0 && (searchQuery !== '' || Object.values(activeSearchFilters).some(v => typeof v === 'boolean' && v === true && (v !== activeSearchFilters.filterByName && v !== activeSearchFilters.filterByPhone && v !== activeSearchFilters.filterByIdNumber && v !== activeSearchFilters.filterByBankAccount))) && (
-        <p className="text-center text-gray-500 dark:text-gray-400 py-4">No senders found matching your search and filter criteria.</p>
-      )}
-
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
-        {locallyFilteredClients.map((client) => {
-          const isSelected = selectedSender?.id === client.id;
-          const showButtons = isSelected || hoveredClientId === client.id;
-          return (
-            <div 
-              key={client.id} 
-              className={cn(
-                "rounded-lg transition-all duration-200 ease-in-out flex flex-col cursor-pointer text-sm",
-                "bg-white dark:bg-gray-800 hover:shadow-xl dark:hover:bg-gray-700/80",
-                "min-h-[90px]",
-                isSelected 
-                  ? "ring-2 ring-blue-500 shadow-xl border-transparent"
-                  : "border border-gray-200 dark:border-gray-700 hover:border-gray-300 dark:hover:border-gray-600"
-              )}
-              onClick={() => {
+      {/* Grid of sender cards */}
+      {!hasNoResults && (
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 xl:grid-cols-3 gap-4">
+          {locallyFilteredClients.map((client) => (
+            <SenderCard
+              key={client.id}
+              client={client}
+              isSelected={selectedSender?.id === client.id}
+              isHovered={hoveredClientId === client.id}
+              onSelect={() => {
                 setSelectedSender(client);
                 if (onViewHistory) {
                   onViewHistory(client.id);
                 }
               }}
+              onViewHistory={onViewHistory}
+              onViewDetails={openDetailsModal}
               onMouseEnter={() => setHoveredClientId(client.id)}
               onMouseLeave={() => setHoveredClientId(null)}
-            >
-              <div className="p-3 flex-grow flex flex-col justify-between">
-                <div>
-                  <div className="flex items-center justify-between mb-1">
-                    <h3 className="font-semibold text-base text-gray-800 dark:text-white truncate mr-2 flex-shrink min-w-0">
-                      {client.firstName} {client.lastName}
-                    </h3>
-                    <AnimatePresence>
-                    {showButtons && (
-                      <motion.div 
-                        initial={{ opacity: 0, x: 5 }}
-                        animate={{ opacity: 1, x: 0 }}
-                        exit={{ opacity: 0, x: 5 }}
-                        transition={{ duration: 0.15 }}
-                        className="flex items-center space-x-1 flex-shrink-0"
-                      >
-                        {onViewHistory && (
-                          <Button 
-                            variant="ghost_icon_sm"
-                            size="icon_xs"
-                            onClick={(e: React.MouseEvent<HTMLButtonElement>) => {
-                              e.stopPropagation();
-                              if (onViewHistory) onViewHistory(client.id);
-                            }}
-                            title="View History"
-                            className="text-gray-500 hover:text-blue-600 dark:text-gray-400 dark:hover:text-blue-400"
-                          >
-                            <History className="h-4 w-4" />
-                          </Button>
-                        )}
-                        <Button
-                          variant="ghost_icon_sm"
-                          size="icon_xs"
-                          onClick={(e: React.MouseEvent<HTMLButtonElement>) => {
-                              e.stopPropagation();
-                              openDetailsModal(client);
-                          }}
-                          title="View Details"
-                          className="text-gray-500 hover:text-blue-600 dark:text-gray-400 dark:hover:text-blue-400"
-                        >
-                          <Eye className="h-4 w-4" />
-                        </Button>
-                      </motion.div>
-                    )}
-                    </AnimatePresence>
-                    {isSelected && !showButtons && (
-                      <CheckCircle className="h-4 w-4 text-blue-500 dark:text-blue-400 flex-shrink-0 ml-auto" />
-                    )}
-                  </div>
-                  <div className="space-y-0.5 text-xs text-gray-500 dark:text-gray-400">
-                    <p className="truncate">ID: {client.idType} - {client.idNumber}</p>
-                    <p className="truncate">Phone: {client.phone}</p>
-                  </div>
-                </div>
-              </div>
-            </div>
-          );
-        })}
-      </div>
+            />
+          ))}
+        </div>
+      )}
 
       <ClientSearchFilter 
         isOpen={isFilterOpen}

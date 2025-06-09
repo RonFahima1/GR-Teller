@@ -1,6 +1,6 @@
 import React from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { X, Eye, Repeat } from 'lucide-react';
+import { X, Eye, Repeat, UserPlus } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Client, FormData } from '../hooks/useSendMoneyForm'; // Adjust path as needed
 import { cn } from '@/lib/utils';
@@ -28,6 +28,7 @@ interface SenderTransactionHistoryModalProps {
   transactions: Transaction[];
   onUseTransaction: (transaction: Transaction) => void; // Callback to prefill form
   isLoading?: boolean;
+  onAddNewReceiver?: () => void; // Callback to add a new receiver
 }
 
 export const SenderTransactionHistoryModal: React.FC<SenderTransactionHistoryModalProps> = ({
@@ -36,6 +37,7 @@ export const SenderTransactionHistoryModal: React.FC<SenderTransactionHistoryMod
   sender,
   transactions,
   onUseTransaction,
+  onAddNewReceiver,
   isLoading,
 }) => {
   if (!isOpen || !sender) return null;
@@ -139,7 +141,22 @@ export const SenderTransactionHistoryModal: React.FC<SenderTransactionHistoryMod
             </div>
 
             {/* Footer */}
-            <div className="p-4 border-t border-gray-200 dark:border-gray-700 flex justify-end">
+            <div className="p-4 border-t border-gray-200 dark:border-gray-700 flex justify-between">
+              {/* New receiver button */}
+              {onAddNewReceiver && (
+                <Button 
+                  variant="default" 
+                  onClick={() => {
+                    // Ensure the onAddNewReceiver callback is called consistently
+                    if (onAddNewReceiver) {
+                      onAddNewReceiver();
+                    }
+                  }}
+                  className="bg-[#007AFF] hover:bg-[#0062CC] text-white"
+                >
+                  <UserPlus className="mr-1.5 h-4 w-4" /> New Receiver
+                </Button>
+              )}
               <Button variant="outline" onClick={onClose}>Close</Button>
             </div>
           </motion.div>

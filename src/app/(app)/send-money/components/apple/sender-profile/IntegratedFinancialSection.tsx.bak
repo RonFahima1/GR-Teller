@@ -1,0 +1,440 @@
+'use client';
+
+import React, { useState } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
+import { Wallet, CreditCard, Building, Banknote, Copy, Check, Info } from 'lucide-react';
+import { cn } from '@/lib/utils';
+
+interface Balance {
+  currency: string;
+  amount: number | string;
+  convertedValue?: string;
+}
+
+interface BankAccount {
+  bankCode?: string;
+  branchCode?: string;
+  accountNumber: string;
+  iban: string;
+  bankName?: string;
+  accountType?: string;
+}
+
+interface IntegratedFinancialSectionProps {
+  balances: Balance[];
+  preferredCurrency: string;
+  bankAccount: BankAccount;
+}
+
+export const IntegratedFinancialSection: React.FC<IntegratedFinancialSectionProps> = ({
+  balances,
+  preferredCurrency,
+  bankAccount
+}) => {
+  const [copied, setCopied] = useState<string | null>(null);
+  const [showToast, setShowToast] = useState(false);
+  const [toastMessage, setToastMessage] = useState('');
+  const [showIBANInfo, setShowIBANInfo] = useState(false);
+
+  // Copy to clipboard function
+  const copyToClipboard = async (text: string) => {
+    if (navigator.clipboard) {
+      try {
+        await navigator.clipboard.writeText(text);
+        return true;
+      } catch (err) {
+        console.error('Failed to copy: ', err);
+        return false;
+      }
+    }
+    return false;
+  };
+
+  // Handle copy with visual feedback
+  const handleCopy = async (text: string) => {
+    const success = await copyToClipboard(text);
+    
+    if (success) {
+      setCopied(text);
+      setToastMessage("Copied to clipboard");
+      setShowToast(true);
+      
+      setTimeout(() => setCopied(null), 1500);
+      setTimeout(() => setShowToast(false), 2000);
+    }
+  };
+
+  // Format IBAN with spaces for better readability
+  const formatIban = (iban: string): string => {
+    if (!iban) return '';
+    return iban.replace(/(.{4})(?=.)/g, '$1 ');
+  };
+
+  // Total balance calculation
+  const totalBalance = balances.length > 0 
+    ? balances.reduce((acc, balance) => acc + (typeof balance.amount === 'number' 
+        ? balance.amount 
+        : parseFloat(balance.amount) || 0), 0).toFixed(2)
+    : "0.00";
+
+  return (
+    <div className="bg-white dark:bg-[#1C1C1E] rounded-xl shadow-sm border border-[#E5E5EA] dark:border-[#38383A] overflow-hidden h-full">
+      <div className="px-5 py-3 border-b border-[#E5E5EA] dark:border-[#38383A] bg-[#F9F9FB] dark:bg-[#2C2C2E]">
+        <h3 className="text-base font-semibold text-[#1C1C1E] dark:text-white">
+          Financial Information
+        </h3>
+      </div>
+
+      <div className="p-5 space-y-5 overflow-auto">
+        {/* Bank Account Details Section - Displayed FIRST */}
+        <div>
+          <div className="flex items-center space-x-2 mb-3">
+            <Building size={16} className="text-[#007AFF] dark:text-[#0A84FF]" />
+            <h3 className="text-base font-semibold text-[#1C1C1E] dark:text-white">Bank Account Details</h3>
+          </div>
+          
+          <div className="space-y-3 bg-white dark:bg-[#2C2C2E] p-3 rounded-lg border border-[#E5E5EA] dark:border-[#38383A]">
+            {bankAccount?.bankName && (
+              <div className="flex justify-between items-center">
+                <div className="flex items-center space-x-2">
+                  <Building size={14} className="text-[#8E8E93] dark:text-[#98989D]" />
+                  <span className="text-sm font-medium text-[#6C6C70] dark:text-[#98989D]">Bank Name</span>
+                </div>
+                <div className="flex items-center space-x-2">
+                  <span className="text-sm font-medium text-[#1C1C1E] dark:text-white">{bankAccount.bankName}</span>
+                  <button 
+                    className="p-1 rounded-full hover:bg-[#F2F2F7] dark:hover:bg-[#3A3A3C] transition-colors"
+                    onClick={() => handleCopy(bankAccount.bankName || '')}
+                  >
+                    {copied === bankAccount.bankName ? 
+                      <Check size={14} className="text-green-500" /> : 
+                      <Copy size={14} className="text-[#8E8E93] dark:text-[#98989D]" />}
+                  </button>
+                </div>
+              </div>
+            )}
+            
+            <div className="flex justify-between items-center">
+              <div className="flex items-center space-x-2">
+                <CreditCard size={14} className="text-[#8E8E93] dark:text-[#98989D]" />
+                <span className="text-sm font-medium text-[#6C6C70] dark:text-[#98989D]">Account Number</span>
+              </div>
+              <div className="flex items-center space-x-2">
+                <span className="text-sm font-medium text-[#1C1C1E] dark:text-white">{bankAccount?.accountNumber || '-'}</span>
+                <button 
+                  className="p-1 rounded-full hover:bg-[#F2F2F7] dark:hover:bg-[#3A3A3C] transition-colors"
+                  onClick={() => handleCopy(bankAccount?.accountNumber || '')}
+                >
+                  {copied === bankAccount?.accountNumber ? 
+                    <Check size={14} className="text-green-500" /> : 
+                    <Copy size={14} className="text-[#8E8E93] dark:text-[#98989D]" />}
+                </button>
+              </div>
+            </div>
+            
+            {bankAccount?.accountType && (
+              <div className="flex justify-between items-center">
+                <div className="flex items-center space-x-2">
+                  <Banknote size={14} className="text-[#8E8E93] dark:text-[#98989D]" />
+                  <span className="text-sm font-medium text-[#6C6C70] dark:text-[#98989D]">Account Type</span>
+                </div>
+                <span className="text-sm font-medium text-[#1C1C1E] dark:text-white">
+                  {bankAccount.accountType}
+                </span>
+              </div>
+            )}
+            
+            {/* IBAN with info button */}
+            <div>
+              <div className="flex justify-between items-center">
+                <div className="flex items-center space-x-2">
+                  <CreditCard size={14} className="text-[#8E8E93] dark:text-[#98989D]" />
+                  <span className="text-sm font-medium text-[#6C6C70] dark:text-[#98989D]">IBAN</span>
+                </div>
+                <div className="flex items-center space-x-2">
+                  <span className="text-sm font-medium text-[#1C1C1E] dark:text-white">
+                    {bankAccount?.iban ? formatIban(bankAccount.iban) : '-'}
+                  </span>
+                  
+                  <div className="flex space-x-1">
+                    {bankAccount?.iban && (
+                      <button 
+                        className="p-1 rounded-full hover:bg-[#F2F2F7] dark:hover:bg-[#3A3A3C] transition-colors"
+                        onClick={() => handleCopy(bankAccount.iban || '')}
+                      >
+                        {copied === bankAccount.iban ? 
+                          <Check size={14} className="text-green-500" /> :
+                          <Copy size={14} className="text-[#8E8E93] dark:text-[#98989D]" />}
+                      </button>
+                    )}
+                    
+                    <button 
+                      className="p-1 rounded-full hover:bg-[#F2F2F7] dark:hover:bg-[#3A3A3C] transition-colors"
+                      onClick={() => setShowIbanInfo(!showIbanInfo)}
+                    >
+                      <Info size={14} className="text-[#8E8E93] dark:text-[#98989D]" />
+                    </button>
+                  </div>
+                </div>
+              </div>
+              
+              <AnimatePresence>
+                {showIbanInfo && (
+                  <motion.div 
+                    initial={{ height: 0, opacity: 0 }}
+                    animate={{ height: 'auto', opacity: 1 }}
+                    exit={{ height: 0, opacity: 0 }}
+                    transition={{ duration: 0.2 }}
+                    className="overflow-hidden"
+                  >
+                    <div className="mt-2 p-3 bg-[#F2F2F7] dark:bg-[#1C1C1E] rounded-lg text-xs text-[#6C6C70] dark:text-[#98989D]">
+                      IBAN (International Bank Account Number) is an internationally agreed system of identifying bank accounts across national borders to facilitate the communication and processing of cross-border transactions.
+                    </div>
+                  </motion.div>
+                )}
+              </AnimatePresence>
+            </div>
+          </div>
+        </div>
+        
+        {/* Account balances section - Displayed SECOND */}
+        <div>
+          <div className="flex items-center space-x-2 mb-3">
+            <CreditCard size={16} className="text-[#007AFF] dark:text-[#0A84FF]" />
+            <h3 className="text-base font-semibold text-[#1C1C1E] dark:text-white">Account Balances</h3>
+          </div>
+          
+          {balances.length > 0 ? (
+            <div className="space-y-3">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                {balances.map((balance, index) => (
+                  <div 
+                    key={index}
+                    className={`p-3 rounded-lg border ${balance.currency === preferredCurrency ? 'border-[#007AFF] dark:border-[#0A84FF] bg-blue-50/50 dark:bg-blue-900/20' : 'border-[#E5E5EA] dark:border-[#38383A] bg-white dark:bg-[#2C2C2E]'}`}
+                  >
+                    <div className="flex justify-between items-center">
+                      <div className="flex items-center space-x-1">
+                        <span className="text-sm font-medium text-[#6C6C70] dark:text-[#98989D]">{balance.currency}</span>
+                      </div>
+                      <div className="text-sm font-semibold text-[#1C1C1E] dark:text-white">
+                        {typeof balance.amount === 'number' 
+                          ? balance.amount.toFixed(2) 
+                          : balance.amount}
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+              
+              <div className="flex justify-between items-center p-3 rounded-lg bg-[#F2F2F7] dark:bg-[#1C1C1E]">
+                <span className="text-sm font-medium text-[#8E8E93] dark:text-[#98989D]">Total balance:</span>
+                <span className="text-sm font-bold text-[#1C1C1E] dark:text-white">{totalBalance}</span>
+              </div>
+            </div>
+          ) : (
+            <div className="p-4 flex flex-col items-center justify-center bg-white dark:bg-[#2C2C2E] rounded-lg border border-[#E5E5EA] dark:border-[#38383A]">
+              <Wallet size={24} className="text-[#8E8E93] dark:text-[#98989D] mb-2" />
+              <p className="text-sm text-[#8E8E93] dark:text-[#98989D]">No balances available</p>
+            </div>
+          )}
+        </div>
+      </div>
+
+      {/* Toast notification */}
+      <AnimatePresence>
+        {showToast && (
+          <motion.div 
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -10 }}
+            transition={{ duration: 0.2 }}
+            className="fixed bottom-6 left-1/2 transform -translate-x-1/2 bg-[#1C1C1E]/90 dark:bg-[#2C2C2E]/90 backdrop-blur-sm text-white px-4 py-2 rounded-full shadow-lg text-sm font-medium z-50"
+          >
+            <div className="flex items-center">
+              <Check size={14} className="mr-2 text-green-500" />
+              {toastMessage}
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </div>
+  );
+    <div className="mb-4 last:mb-0 pb-4 border-b border-[#E5E5EA] dark:border-[#38383A] last:border-b-0 last:pb-0">
+      <h4 className="text-base font-medium text-[#1C1C1E] dark:text-white mb-3">
+        {title}
+      </h4>
+      {children}
+    </div>
+  );
+
+  const DetailRow = ({ 
+    label, 
+    value, 
+    icon,
+    canCopy = false, 
+    id, 
+    hasInfo = false, 
+    onInfoClick
+  }: { 
+    label: string; 
+    value: string; 
+    icon: React.ReactNode;
+    canCopy?: boolean; 
+    id?: string;
+    hasInfo?: boolean;
+    onInfoClick?: () => void;
+  }) => {
+    return (
+      <div className="flex items-center py-3 border-b border-[#E5E5EA] dark:border-[#38383A] last:border-b-0">
+        <div className="w-8 h-8 rounded-full bg-[#F2F2F7] dark:bg-[#2C2C2E] flex items-center justify-center mr-3 flex-shrink-0">
+          {icon}
+        </div>
+        <div className="flex-grow">
+          <div className="flex items-center mb-0.5">
+            <span className="text-sm font-medium text-[#6C6C70] dark:text-[#98989D]">{label}</span>
+            {hasInfo && (
+              <motion.button 
+                whileHover={{ scale: 1.1 }}
+                whileTap={{ scale: 0.95 }}
+                onClick={onInfoClick}
+                className="ml-2 text-[#8E8E93] hover:text-[#007AFF] transition-colors"
+              >
+                <Info size={14} />
+              </motion.button>
+            )}
+          </div>
+          <div className="flex items-center justify-between">
+            <span className="text-sm font-medium text-[#1C1C1E] dark:text-white tracking-wide">
+              {value}
+            </span>
+            {canCopy && (
+              <motion.button 
+                whileTap={{ scale: 0.9 }}
+                onClick={() => handleCopy(value.replace(/\s/g, ''), id || label)}
+                className="ml-3 text-[#007AFF] dark:text-[#0A84FF] hover:text-[#0071E3] dark:hover:text-[#0071E3] transition-colors p-1.5 rounded-full hover:bg-[#F2F2F7] dark:hover:bg-[#2C2C2E]"
+                aria-label={`Copy ${label}`}
+              >
+                {copied === (id || label) ? (
+                  <Check size={16} className="text-[#34C759] dark:text-[#30D158]" />
+                ) : (
+                  <Copy size={16} />
+                )}
+              </motion.button>
+            )}
+          </div>
+        </div>
+      </div>
+    );
+  };
+
+  return (
+    <div className="bg-white dark:bg-[#1C1C1E] rounded-xl shadow-sm border border-[#E5E5EA] dark:border-[#38383A] overflow-hidden h-full">
+      <div className="px-5 py-3 border-b border-[#E5E5EA] dark:border-[#38383A] bg-[#F9F9FB] dark:bg-[#2C2C2E]">
+        <h3 className="text-base font-semibold text-[#1C1C1E] dark:text-white">
+          Financial Information
+        </h3>
+      </div>
+      
+      <div className="p-5">
+        <InfoSection title="Account Balances">
+          {balances.length > 0 ? (
+            <>
+              <div className="grid grid-cols-2 gap-3 mb-3">
+                {balances.map((balance, index) => (
+                  <div 
+                  >
+                    <div className="p-3 text-sm text-[#6C6C70] dark:text-[#98989D]">
+                      <div className="flex items-start">
+                        <Info size={14} className="text-[#007AFF] dark:text-[#0A84FF] mr-2 mt-0.5" />
+                        <p>IBAN is used for international transfers and ensures your money reaches the correct account.</p>
+                      </div>
+                    </div>
+                  </motion.div>
+                )}
+              </AnimatePresence>
+            </div>
+          </div>
+
+          {/* Account balances section - Now second */}
+          <div>
+            <div className="flex items-center space-x-2 mb-3">
+              <CreditCard size={16} className="text-[#007AFF] dark:text-[#0A84FF]" />
+              <h3 className="text-base font-semibold text-[#1C1C1E] dark:text-white">Account Balances</h3>
+            </div>
+            
+            <div className="space-y-3">
+              <InfoSection title="Account Balances">
+                {balances.length > 0 ? (
+                  <>
+                    <div className="grid grid-cols-2 gap-3 mb-3">
+                      {balances.map((balance, index) => (
+                        <div 
+                          key={`${balance.currency}-${index}`}
+                          className={cn(
+                            "p-3 rounded-lg border",
+                            balance.currency === preferredCurrency
+                              ? "border-[#007AFF] dark:border-[#0A84FF] bg-[#F2F8FF] dark:bg-[#0A84FF]/10"
+                              : "border-[#E5E5EA] dark:border-[#38383A] bg-[#F9F9F9] dark:bg-[#2C2C2E]"
+                          )}
+                        >
+                          <div className="flex items-center mb-2">
+                            <div className={cn(
+                              "w-6 h-6 rounded-full flex items-center justify-center mr-2",
+                              balance.currency === preferredCurrency
+                                ? "bg-[#007AFF] dark:bg-[#0A84FF]"
+                                : "bg-[#E5E5EA] dark:bg-[#38383A]"
+                            )}>
+                              <Wallet size={14} className={balance.currency === preferredCurrency ? "text-white" : "text-[#8E8E93] dark:text-[#98989D]"} />
+                            </div>
+                            <span className="text-sm font-medium text-[#6C6C70] dark:text-[#98989D]">{balance.currency}</span>
+                          </div>
+                          <div className="text-sm font-semibold text-[#1C1C1E] dark:text-white">
+                            {typeof balance.amount === 'number' 
+                              ? balance.amount.toFixed(2) 
+                              : balance.amount}
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                    <div className="flex justify-between items-center mt-3 p-2 bg-[#F2F2F7] dark:bg-[#2C2C2E] rounded-md">
+                      <span className="text-sm text-[#6C6C70] dark:text-[#98989D]">Total Balance</span>
+                      <span className="text-sm font-semibold text-[#1C1C1E] dark:text-white">{totalBalance}</span>
+                    </div>
+                  </>
+                ) : (
+                  <div className="py-4 flex flex-col items-center justify-center">
+                    <Wallet 
+                      size={24} 
+                      className="text-[#8E8E93] dark:text-[#98989D] mb-2" 
+                    />
+                    <p className="text-sm text-[#8E8E93] dark:text-[#98989D]">
+                      No balances available
+                    </p>
+                  </div>
+                )}
+              </InfoSection>
+            </div>
+          </div>
+        </div>
+
+        {/* Apple-style toast notification */}
+        <AnimatePresence>
+          {showToast && (
+            <motion.div 
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -10 }}
+              transition={{ type: 'spring', stiffness: 500, damping: 30 }}
+              className="absolute bottom-6 left-1/2 transform -translate-x-1/2 bg-[#1C1C1E]/90 dark:bg-[#2C2C2E]/90 backdrop-blur-sm text-white px-4 py-2.5 rounded-full shadow-lg text-sm font-medium z-10"
+            >
+              <div className="flex items-center">
+                <Check size={14} className="mr-2 text-[#34C759] dark:text-[#30D158]" />
+                {toastMessage}
+              </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
+      </div>
+    </div>
+  );
+};

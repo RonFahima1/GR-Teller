@@ -7,19 +7,25 @@ import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import { ConfettiSuccess } from '@/components/ui/ConfettiSuccess';
 import { useSendMoneyForm, Client } from './hooks/useSendMoneyForm';
-import { SenderSelection } from './components/SenderSelection';
-import { ReceiverSelection } from './components/ReceiverSelection';
+// Original components
 import { TransferDetails } from './components/TransferDetails';
 import { AmountEntry } from './components/AmountEntry';
 import { ConfirmationStep } from './components/ConfirmationStep';
 import { ProgressIndicator } from './components/ProgressIndicator';
-import { NewSenderForm } from './components/NewSenderForm';
-import { NewReceiverForm } from './components/NewReceiverForm';
 import { SenderTransactionHistoryModal, Transaction } from './components/SenderTransactionHistoryModal';
-import { RecentReceiversModal } from './components/RecentReceiversModal';
 import { ReceiverDetailsModal } from './components/ReceiverDetailsModal';
 import { ReceiverTransactionHistoryModal } from './components/ReceiverTransactionHistoryModal';
+// New Apple-styled components
+import AppleSenderSelection from './components/apple/SenderSelection';
+import AppleSenderProfilePage from './components/apple/AppleSenderProfilePage';
+import AppleReceiverSelectionPage from './components/apple/AppleReceiverSelectionPage';
+import { AppleReceiverProfilePage } from './components/apple/AppleReceiverProfilePage';
+import { AppleNewReceiverForm } from './components/apple/AppleNewReceiverForm';
+import { AppleRecentReceiversModal } from './components/apple/AppleRecentReceiversModal';
 import { Receiver } from '@/types/receiver';
+// Import NewSenderForm for step 1
+import { NewSenderForm } from './components/NewSenderForm';
+import { useNewReceiverNavigation } from './hooks/useNewReceiverNavigation';
 
 // Define step interfaces
 interface Step {
@@ -31,6 +37,13 @@ interface Step {
 }
 
 export default function SendMoneyPage() {
+  // State for managing Apple-style UI views
+  const [showDetailedSenderProfile, setShowDetailedSenderProfile] = useState(false);
+  const [showReceiverProfilePage, setShowReceiverProfilePage] = useState(false);
+  
+  // Custom hook for handling new receiver navigation
+  const { handleNavigateToNewReceiver } = useNewReceiverNavigation();
+  
   const {
     steps: formSteps,
     activeStep,
@@ -96,6 +109,7 @@ export default function SendMoneyPage() {
     handleOpenReceiverHistoryModal,
     handleCloseReceiverHistoryModal,
     handleGoToStep,
+    handleShowRecentReceiversModal,
   } = useSendMoneyForm();
   
   // Define our steps with icons and colors
@@ -176,85 +190,189 @@ export default function SendMoneyPage() {
           onCancel={() => setShowNewSenderForm(false)}
         />
       );
-    }
-
-    if (showNewReceiverForm && activeStep === 2) {
+    } else if (showNewReceiverForm && activeStep === 2) {
       return (
-        <NewReceiverForm 
+        <AppleNewReceiverForm
+          selectedSender={selectedSender}
+          onBack={() => {
+            setShowNewReceiverForm(false);
+          }}
           onSave={(data) => {
             handleSaveReceiver(data);
+            // After saving, return to receiver selection
+            setShowNewReceiverForm(false);
           }}
           onCancel={() => setShowNewReceiverForm(false)}
         />
       );
     }
 
+    // If we're showing the receiver profile, render it over other steps
+    if (showReceiverProfilePage && selectedReceiver && selectedSender) {
+      return (
+        <AnimatePresence mode="wait">
+          <motion.div
+            key="receiver-detailed-profile"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.2 }}
+            className="relative"
+          >
+            <AppleReceiverProfilePage 
+              receiver={selectedReceiver}
+              selectedSender={selectedSender}
+              onBack={() => {
+                // Return to sender profile view instead of receiver selection
+                setShowReceiverProfilePage(false);
+                // Hide the recent receivers modal
+                handleCloseRecentReceiversModal();
+                // Show the sender profile
+                setShowDetailedSenderProfile(true);
+              }}
+              onEdit={() => {
+                // Show edit form for the receiver
+                setShowReceiverProfilePage(false);
+                setShowNewReceiverForm(true);
+              }}
+              onAddNewReceiver={() => {
+                setShowReceiverProfilePage(false);
+                setSelectedReceiver(null); // Clear selected receiver
+                setShowNewReceiverForm(true);
+              }}
+              onContinue={() => {
+                // Hide the receiver profile
+                setShowReceiverProfilePage(false);
+                
+                // Hide the detailed sender profile if it's showing
+                setShowDetailedSenderProfile(false);
+                
+                // Navigate directly to the next step (Details/Amount)
+                handleGoToStep(3); // Step 3 is the Details step
+              }}
+            />
+          </motion.div>
+        </AnimatePresence>
+      );
+    }
+
+    // If we're showing the detailed sender profile, render it over the standard steps
+    if (showDetailedSenderProfile && selectedSender) {
+      return (
+        <AnimatePresence mode="wait">
+          <motion.div
+            key="sender-detailed-profile"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.2 }}
+            className="relative"
+          >
+            {/* Sender detailed profile with built-in navigation */}
+            <AppleSenderProfilePage 
+              senderId={selectedSender.id} 
+              onBack={() => setShowDetailedSenderProfile(false)}
+              onContinue={() => {
+                // Keep the sender profile in the background state when showing receivers
+                // Show recent receivers modal when continuing from sender profile
+                handleShowRecentReceiversModal();
+              }}
+            />
+          </motion.div>
+        </AnimatePresence>
+      );
+    }
+
     switch (activeStep) {
       case 1:
         return (
-          <SenderSelection
-            initialLoading={initialLoading}
-            searchQuery={searchQuery}
-            setSearchQuery={setSearchQuery}
-            filteredClients={filteredClients}
-            selectedSender={selectedSender}
-            setSelectedSender={setSelectedSender}
-            setShowNewSenderForm={setShowNewSenderForm}
-            onViewHistory={handleShowSenderHistory}
-          />
+          <AnimatePresence mode="wait">
+            <motion.div
+              key="sender-selection"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              transition={{ duration: 0.2 }}
+            >
+              {/* Use Apple-styled sender selection */}
+              <AppleSenderSelection
+                initialLoading={initialLoading}
+                searchQuery={searchQuery}
+                setSearchQuery={setSearchQuery}
+                filteredClients={filteredClients}
+                selectedSender={selectedSender}
+                setSelectedSender={setSelectedSender}
+                setShowNewSenderForm={setShowNewSenderForm}
+                onViewHistory={handleShowSenderHistory}
+                showDetailedProfile={showDetailedSenderProfile}
+                setShowDetailedProfile={setShowDetailedSenderProfile}
+              />
+            </motion.div>
+          </AnimatePresence>
         );
       case 2:
         return (
-          <ReceiverSelection
-            initialLoading={initialLoading}
-            searchQuery={searchQuery}
-            setSearchQuery={setSearchQuery}
-            filteredClients={filteredClients.map(c => ({...c, id: c.id || Math.random().toString() }))}
-            selectedReceiver={selectedReceiver}
-            setSelectedReceiver={setSelectedReceiver}
-            setShowNewReceiverForm={setShowNewReceiverForm}
-            selectedSender={selectedSender}
-            onSetReceiverSameAsSender={handleSetReceiverSameAsSender}
-            onUseGlobalRemitProduct={handleUseGlobalRemitProduct}
-            onShowReceiverDetails={(client: Client) => {
-                const mockReceiverForDetails = recentReceivers.find(r => r.firstName === client.firstName && r.lastName === client.lastName);
-                if (mockReceiverForDetails) {
-                    handleOpenReceiverDetailsModal(mockReceiverForDetails);
-                } else {
-                    const partialReceiver: Receiver = {
-                        id: client.id || 'temp-id',
-                        firstName: client.firstName,
-                        lastName: client.lastName,
-                        phone: client.phone,
-                        country: client.country,
-                        city: client.city,
-                        streetAddress: client.streetAddress,
-                    };
-                    handleOpenReceiverDetailsModal(partialReceiver);
-                }
-            }}
-            onShowReceiverHistory={(clientId: string) => {
-                let receiverToViewHistory = recentReceivers.find(r => r.id === clientId);
-                if (!receiverToViewHistory) {
-                    const clientForHistory = filteredClients.find(c => c.id === clientId);
+          <AnimatePresence mode="wait">
+            <motion.div
+              key="receiver-selection"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              transition={{ duration: 0.2 }}
+            >
+              <AppleReceiverSelectionPage
+                filteredReceivers={filteredClients.map(c => ({...c, id: c.id || Math.random().toString() }))}  
+                selectedReceiver={selectedReceiver}
+                // Use type assertion to handle the different Client interfaces
+                setSelectedReceiver={(client) => setSelectedReceiver(client as any)}
+                selectedSender={selectedSender || {} as any}
+                onAddNewReceiver={() => setShowNewReceiverForm(true)}
+                onBack={() => {
+                  // When going back, if we came from sender profile, go back to it
+                  if (showDetailedSenderProfile) {
+                    // Maintain sender profile state
+                  } else {
+                    // Otherwise go back to sender selection step
+                    handleNavigation('back');
+                  }
+                }}
+                onBackToSenderSearch={() => handleNavigation('back')}
+                onContinue={() => {
+                  if (selectedReceiver) {
+                    handleNavigation('next');
+                  }
+                }}
+                searchQuery={searchQuery}
+                setSearchQuery={setSearchQuery}
+                isLoading={initialLoading}
+                onShowReceiverDetails={(client) => {
+                  // Show the Apple-style receiver profile page
+                  setSelectedReceiver(client as any);
+                  setShowReceiverProfilePage(true);
+                }}
+                onShowReceiverHistory={(receiverId: string) => {
+                  // Find the receiver and show their history
+                  let receiverToViewHistory = recentReceivers.find(r => r.id === receiverId);
+                  if (!receiverToViewHistory) {
+                    const clientForHistory = filteredClients.find(c => c.id === receiverId);
                     if (clientForHistory) {
-                        receiverToViewHistory = {
-                            id: clientForHistory.id,
-                            firstName: clientForHistory.firstName,
-                            lastName: clientForHistory.lastName,
-                            phone: clientForHistory.phone,
-                            country: clientForHistory.country,
-                        };
+                      receiverToViewHistory = {
+                        id: clientForHistory.id || 'temp-id',
+                        firstName: clientForHistory.firstName,
+                        lastName: clientForHistory.lastName,
+                        phone: clientForHistory.phone,
+                        email: clientForHistory.email,
+                        country: clientForHistory.country,
+                      };
+                      handleOpenReceiverHistoryModal(receiverToViewHistory as any);
                     }
-                }
-
-                if (receiverToViewHistory) {
+                  } else {
                     handleOpenReceiverHistoryModal(receiverToViewHistory);
-                } else {
-                    console.warn("Could not find receiver to show history for ID:", clientId);
-                }
-            }}
-          />
+                  }
+                }}
+              />
+            </motion.div>
+          </AnimatePresence>
         );
       case 3:
         return (
@@ -306,30 +424,6 @@ export default function SendMoneyPage() {
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-white to-gray-50 dark:from-gray-950 dark:to-gray-900">
-      {/* Header - iOS Style */}
-      <header className="sticky top-0 z-50 bg-white/90 dark:bg-gray-950/90 backdrop-blur-md border-b border-gray-200 dark:border-gray-800">
-        <div className="container mx-auto px-4 h-16 flex items-center justify-between">
-          <div className="flex items-center">
-            {activeStep > 1 && (
-              <motion.button 
-                onClick={() => handleNavigation('back')}
-                className="mr-3 p-2 rounded-full hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
-                whileHover={{ scale: 1.05 }}
-                whileTap={{ scale: 0.95 }}
-              >
-                <ArrowLeft className="h-5 w-5 text-gray-600 dark:text-gray-300" />
-              </motion.button>
-            )}
-            <h1 className="text-xl font-semibold text-gray-900 dark:text-white">Send Money</h1>
-          </div>
-          
-          <div className="flex items-center space-x-2">
-            <span className="text-sm font-medium text-gray-500 dark:text-gray-400">
-              Step {activeStep} of {steps.length}
-            </span>
-          </div>
-        </div>
-      </header>
       
       {/* Enhanced Progress bar - iOS Style */}
       <div className="h-2 bg-gray-100 dark:bg-gray-800 w-full overflow-hidden">
@@ -344,7 +438,7 @@ export default function SendMoneyPage() {
         />
       </div>
       
-      {/* Main content - Responsive Layout for Larger Screens with reduced padding */}
+      {/* Main content - Regular scrolling behavior */}
       <main className="container mx-auto px-4 py-4 pb-16 flex flex-col lg:flex-row lg:gap-6 lg:items-start">
         {isLoading || initialLoading ? (
           <div className="max-w-3xl mx-auto">
@@ -355,16 +449,18 @@ export default function SendMoneyPage() {
             </div>
           </div>
         ) : (
-          <div className="flex flex-col max-w-7xl mx-auto">
+          <div className="flex flex-col max-w-7xl mx-auto w-full">
             {/* Horizontal Progress Indicator - iOS Style */}
-            <ProgressIndicator steps={steps} activeStep={activeStep} />
+            <div className="mb-6">
+              <ProgressIndicator steps={steps} activeStep={activeStep} />
+            </div>
             
             {/* Step content */}
             <div className="w-full">
               <div className="bg-white dark:bg-gray-900 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-800 p-6 mb-8">
                 
                 {/* Render the active step component */}
-                <AnimatePresence mode="wait">
+                <AnimatePresence mode="wait" initial={false}>
                   <motion.div
                     key={activeStep + (showNewSenderForm ? '_nsf' : '') + (showNewReceiverForm ? '_nrf' : '')}
                     initial={{ opacity: 0, y: 20 }}
@@ -390,7 +486,7 @@ export default function SendMoneyPage() {
                   </Button>
                 )}
                 
-                {activeStep < steps.length && (
+                {(!transferComplete && activeStep > 0 && activeStep <= steps.length && !showDetailedSenderProfile) && (
                   <motion.div
                     whileHover={{ scale: canProceed() ? 1.01 : 1 }}
                     whileTap={{ scale: canProceed() ? 0.98 : 1 }}
@@ -440,28 +536,90 @@ export default function SendMoneyPage() {
         transactions={senderTransactions}
         isLoading={isLoadingHistory}
         onUseTransaction={handleUseTransactionFromHistory}
+        onAddNewReceiver={() => {
+          // First explicitly close the modal
+          handleCloseSenderHistoryModal();
+          
+          // Then reset the search query
+          setSearchQuery('');
+          
+          // Navigate to receiver step (step 2)
+          handleGoToStep(2);
+          
+          // Finally show the new receiver form
+          // Adding a small delay to ensure state updates have propagated
+          setTimeout(() => {
+            setShowNewReceiverForm(true);
+          }, 10);
+        }}
       />
-
+      
       {/* Modals */}
       <AnimatePresence>
         {showRecentReceiversModal && selectedSender && (
-          <RecentReceiversModal
+          <AppleRecentReceiversModal 
             isOpen={showRecentReceiversModal}
-            onClose={handleCloseRecentReceiversModal}
-            receivers={recentReceivers}
-            isLoading={isLoadingRecentReceivers}
-            selectedSenderName={selectedSender?.name}
-            onSelectReceiver={handleSelectReceiverFromRecent}
-            onShowReceiverDetails={handleOpenReceiverDetailsModal}
-            onShowReceiverHistory={(receiverId: string) => {
-                const receiver = recentReceivers.find(r => r.id === receiverId);
-                if (receiver) {
-                    handleOpenReceiverHistoryModal(receiver);
-                }
+            onClose={() => {
+              // When closing the recent receivers modal, just close it without changing step
+              // This allows us to stay on the sender profile but close the modal
+              handleCloseRecentReceiversModal();
+              
+              // Explicitly navigate to receiver selection
+              handleGoToStep(2);
             }}
-            onSearchOrAddNew={() => {
+            receivers={recentReceivers}
+            selectedSenderName={selectedSender ? `${selectedSender.firstName} ${selectedSender.lastName}` : ''}
+            isLoading={isLoadingRecentReceivers}
+            onSelectReceiver={(receiver) => {
+              // Create a compatible client object from receiver
+              const clientReceiver = {
+                id: receiver.id,
+                firstName: receiver.firstName,
+                lastName: receiver.lastName,
+                email: receiver.email,
+                phone: receiver.phone,
+                country: receiver.country,
+                city: receiver.city,
+                streetAddress: receiver.streetAddress
+              };
+              
+              // Pass this client-compatible object to the handler
+              handleSelectReceiverFromRecent(clientReceiver as any);
+              handleCloseRecentReceiversModal();
+              
+              // Show the receiver profile directly
+              setShowReceiverProfilePage(true);
+            }}
+            onShowReceiverDetails={(receiver: any) => {
+              handleCloseRecentReceiversModal();
+              
+              // Use type assertion to override type safety - in a real app we'd implement proper type conversion
+              // This works because the actual shape of the objects is compatible for our navigation purposes
+              setSelectedReceiver(receiver as any);
+              
+              // Show receiver profile page
+              setShowReceiverProfilePage(true);
+            }}
+            onShowReceiverHistory={(receiverId: any) => {
+              const receiver = recentReceivers.find(r => r.id === receiverId);
+              if (receiver) {
+                handleOpenReceiverHistoryModal(receiver);
+              }
+            }}
+            onAddNewReceiver={() => {
+                // Use the centralized navigation handler
+                handleNavigateToNewReceiver(
+                  handleCloseRecentReceiversModal,
+                  setShowNewReceiverForm,
+                  setSearchQuery,
+                  handleGoToStep
+                );
+            }}
+            onSearchReceiver={() => {
+                // Close modal and show receiver selection with search focus
                 handleCloseRecentReceiversModal();
-                handleGoToStep(2);
+                // TODO: Add logic to focus on search field
+                // For now, just showing the receiver selection is sufficient
             }}
           />
         )}
