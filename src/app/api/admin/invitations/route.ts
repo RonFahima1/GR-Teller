@@ -3,6 +3,9 @@ import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/authOptions';
 import { prisma } from '@/lib/prisma';
 
+console.log('DEBUG: DATABASE_URL', process.env.DATABASE_URL);
+console.log('DEBUG: REDIS_URL', process.env.REDIS_URL);
+
 export async function GET(req: NextRequest) {
   try {
     const session = await getServerSession(authOptions);
