@@ -7,6 +7,7 @@ import { Switch } from "@/components/ui/switch";
 import { Sun, Moon, User, Mail, Smartphone, ShieldCheck, KeyRound, Bell, Globe, LogOut, Settings } from "lucide-react";
 import { ThemeSettings } from "@/components/settings/theme-settings";
 import { SSOSettings } from "@/components/settings/sso-settings";
+import PasskeyManager from "@/components/passkey/PasskeyManager";
 
 const mockUser = {
   name: "Alex Morgan",
@@ -107,6 +108,11 @@ export default function SettingsPage() {
           <Button variant="outline" className="w-full">Change Password</Button>
         </CardContent>
       </Card>
+
+      {/* Passkey Management */}
+      <div className="mb-6">
+        <PasskeyManager />
+      </div>
 
       {/* Preferences */}
       <Card className="mb-6 card-ios">
